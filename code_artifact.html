@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>배곧초등학교 수학 대결 게임</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+        body {
+            font-family: 'Jua', sans-serif;
+            background: radial-gradient(circle, #2e1065 0%, #09090b 100%);
+        }
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-bounce-slow {
+            animation: bounce-slow 1.5s infinite ease-in-out;
+        }
+        @keyframes pop-in {
+            0% { transform: scale(0.4); opacity: 0; }
+            70% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: pop-in 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        /* 소세지 모양 마디 네온 스타일 */
+        .sausage-segment {
+            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.4), 0 4px 6px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 text-white overflow-x-hidden relative">
+
+    <div class="w-full max-w-2xl bg-slate-900/95 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden border border-purple-500/30 flex flex-col relative">
+        
+        <!-- Top HUD (Pause, Sound, Music Controls) -->
+        <div class="flex justify-between items-center p-4 bg-purple-950/50 border-b border-purple-500/20">
+            <div class="flex space-x-2">
+                <button onclick="togglePause()" class="w-10 h-10 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl shadow-lg flex items-center justify-center text-lg active:scale-95 transition">⏸️</button>
+                <button onclick="toggleSound()" id="sound-btn" class="w-10 h-10 bg-purple-600 hover:bg-purple-500 text-white rounded-xl shadow-lg flex items-center justify-center text-lg active:scale-95 transition">🔊</button>
+                <button onclick="toggleMusic()" id="music-btn" class="w-10 h-10 bg-purple-600 hover:bg-purple-500 text-white rounded-xl shadow-lg flex items-center justify-center text-lg active:scale-95 transition">🎵</button>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="bg-purple-900/80 px-3.5 py-1.5 rounded-full border border-purple-400/30 text-sm">
+                    점수: <span id="score-val" class="text-amber-400 font-bold text-lg">0</span>
+                </div>
+                <div class="bg-purple-900/80 px-3.5 py-1.5 rounded-full border border-purple-400/30 text-sm">
+                    콤보: <span id="streak-val" class="text-emerald-400 font-bold text-lg">0</span>연속
+                </div>
+            </div>
+        </div>
+
+        <div class="relative h-64 sm:h-72 bg-gradient-to-b from-indigo-950 via-purple-900 to-slate-950 flex flex-col items-center justify-center overflow-hidden border-b border-purple-500/20">
+            <!-- Background Neon Waves Simulation -->
+            <div class="absolute inset-0 opacity-20 pointer-events-none flex items-center justify-center">
+                <div class="w-[500px] h-[500px] rounded-full border-8 border-cyan-400 animate-pulse"></div>
+                <div class="absolute w-[350px] h-[350px] rounded-full border-8 border-pink-500"></div>
+            </div>
+
+            <!-- Player VS COM Labels -->
+            <div class="absolute top-3 inset-x-6 flex justify-between items-center z-20 text-xs sm:text-sm font-bold">
+                <div class="bg-emerald-600/90 px-3 py-1 rounded-full shadow border border-emerald-400/40 text-white flex items-center space-x-1">
+                    <span>👤 PLAYER (나)</span>
+                </div>
+                <div class="bg-rose-600/90 px-3 py-1 rounded-full shadow border border-rose-400/40 text-white flex items-center space-x-1">
+                    <span>💻 COM (컴퓨터)</span>
+                </div>
+            </div>
+
+            <!-- Tug of War Visual Scene with 6 Sausage Segments -->
+            <div class="relative z-20 flex items-center justify-center w-full px-6 mt-6">
+                
+                <!-- Rope & 6-Segment Sausage Track Container -->
+                <div class="absolute inset-x-10 flex flex-col items-center justify-center pointer-events-none">
+                    <!-- Step Indicators -->
+                    <div class="flex justify-between w-full px-6 mb-2 opacity-80">
+                        <div class="w-3 h-3 rounded-full border border-cyan-300 bg-cyan-900/60 flex items-center justify-center text-[8px]" title="플레이어 승리 지점">🏁</div>
+                        <div class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-md scale-125" id="center-marker" title="중앙"></div>
+                        <div class="w-3 h-3 rounded-full border border-rose-300 bg-rose-900/60 flex items-center justify-center text-[8px]" title="컴퓨터 승리 지점">🏁</div>
+                    </div>
+
+                    <!-- 6 Sausage Segments Connected as Rope with Exact Flex Container -->
+                    <div id="rope-container" class="w-4/5 h-6 bg-amber-800/80 rounded-full flex items-center justify-between p-1 shadow-inner border border-amber-600 relative transition-transform duration-300 ease-out" style="transform: translateX(0px);">
+                        <!-- Left 3 Sausage Links -->
+                        <div class="flex-1 h-5 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 rounded-full mx-0.5 sausage-segment border border-amber-400/50"></div>
+                        <div class="flex-1 h-5 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 rounded-full mx-0.5 sausage-segment border border-amber-400/50"></div>
+                        <div class="flex-1 h-5 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 rounded-full mx-0.5 sausage-segment border border-amber-400/50"></div>
+                        <!-- Right 3 Sausage Links -->
+                        <div class="flex-1 h-5 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 rounded-full mx-0.5 sausage-segment border border-amber-400/50"></div>
+                        <div class="flex-1 h-5 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 rounded-full mx-0.5 sausage-segment border border-amber-400/50"></div>
+                        <div class="flex-1 h-5 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 rounded-full mx-0.5 sausage-segment border border-amber-400/50"></div>
+                    </div>
+                    
+                    <!-- Steps remaining helper text -->
+                    <div class="mt-2 text-[11px] text-purple-200 font-semibold bg-purple-950/80 px-3 py-0.5 rounded-full border border-purple-500/40">
+                        줄다리기 상태: <span id="steps-remaining" class="text-amber-300">중앙 (6마디 기준 균형)</span>
+                    </div>
+                </div>
+
+                <!-- Characters Layer (Behind rope visually or properly layered) -->
+                <div class="w-full flex justify-between items-center px-2 z-10">
+                    <!-- Left Character (Player) -->
+                    <div id="char-left" class="text-5xl sm:text-6xl transition-all duration-300 transform animate-bounce-slow">
+                        🐹
+                    </div>
+                    
+                    <!-- Right Character (COM) -->
+                    <div id="char-right" class="text-5xl sm:text-6xl transition-all duration-300 transform animate-bounce-slow">
+                        🤖
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 sm:p-8 bg-slate-900 flex flex-col items-center justify-center relative">
+            
+            <!-- Problem Box -->
+            <div class="bg-slate-800/95 border border-purple-500/40 rounded-3xl px-6 py-4 w-full text-center shadow-xl mb-6 relative">
+                <p id="problem-desc" class="text-slate-300 text-xs sm:text-sm mb-1">다음 자연수 사칙연산의 알맞은 답을 고르세요</p>
+                <h2 id="problem-expression" class="text-2xl sm:text-3xl font-black text-cyan-300 tracking-wider">12 + 15 = ?</h2>
+            </div>
+
+            <!-- Choice Buttons Grid -->
+            <div id="choices-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full">
+                <!-- Injected dynamically -->
+            </div>
+        </div>
+
+        <div id="result-overlay" class="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px] hidden flex flex-col items-center justify-center z-40 pointer-events-none transition-all duration-200">
+            <div id="overlay-icon" class="text-8xl sm:text-9xl mb-2 animate-pop drop-shadow-[0_0_30px_rgba(0,0,0,0.8)]">⭕</div>
+        </div>
+
+        <div id="modal-overlay" class="absolute inset-0 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center z-50 p-6 text-center overflow-y-auto">
+            <h2 id="modal-title" class="text-3xl font-bold text-amber-400 mb-2">🐾 배곧초 수학 줄다리기 대결</h2>
+            <div id="modal-desc" class="text-slate-300 text-sm mb-6 space-y-2 text-left bg-slate-900/90 p-4 rounded-2xl border border-purple-500/30 max-w-sm w-full">
+                <p class="font-bold text-cyan-300 text-center mb-2">📢 게임 규칙 및 설명</p>
+                <p>1. 화면에 나오는 자연수의 사칙연산(덧셈, 뺄셈, 곱셈, 나눗셈) 문제를 풀고 알맞은 정답을 고르세요!</p>
+                <p>2. <span class="text-emerald-400 font-bold">정답</span>을 맞추면 햄스터(플레이어)가 소세지 줄을 당겨 <span class="text-emerald-400 font-bold">왼쪽</span>으로 한 마디 이동합니다.</p>
+                <p>3. <span class="text-rose-400 font-bold">틀리면</span> 컴퓨터가 줄을 당겨 <span class="text-rose-400 font-bold">오른쪽</span>으로 한 마디 끌려갑니다.</p>
+                <p>4. 소세지 6마디를 먼저 상대방 쪽으로 끌고 오면 승리합니다!</p>
+            </div>
+
+            <!-- Nickname input & Scoreboard container (hidden initially) -->
+            <div id="scoreboard-container" class="hidden w-full max-w-sm mb-4 space-y-3">
+                <div class="flex items-center space-x-2">
+                    <input type="text" id="player-nickname" placeholder="플레이어 닉네임 입력 (예: 배곧수학왕)" maxlength="12" class="flex-1 bg-slate-800 border border-purple-500/50 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-cyan-400">
+                    <button onclick="saveScore()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition shadow">기록하기</button>
+                </div>
+                <div class="bg-slate-900/90 border border-purple-500/30 rounded-2xl p-3 text-left">
+                    <p class="text-xs font-bold text-amber-300 mb-2 flex items-center justify-between">
+                        <span>🏆 명예의 전당 (스코어보드)</span>
+                        <span class="text-[10px] text-slate-400">TOP 5</span>
+                    </p>
+                    <div id="scoreboard-list" class="space-y-1.5 text-xs text-slate-300 max-h-32 overflow-y-auto">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <button id="modal-btn" onclick="startGame()" class="px-8 py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-2xl shadow-lg transition active:scale-95 text-lg cursor-pointer">
+                게임 시작하기 🚀
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer info -->
+    <div class="mt-4 text-xs text-slate-500 text-center">
+        배곧초등학교 스마트 수학 학습 인터랙티브 웹앱
+    </div>
+
+    <script>
+        let score = 0;
+        let streak = 0;
+        let isPaused = true; 
+        let soundOn = true;
+        let musicOn = true;
+        let currentProblem = null;
+        
+        let stepOffset = 0; // -3 ~ +3 (총 6마디 기준)
+        const MAX_STEPS = 3;
+
+        const questionBank = [
+            { desc: "알맞은 덧셈 결과를 고르세요", expr: "38 + 24 = ?", answer: 62, choices: [52, 62, 64, 72] },
+            { desc: "알맞은 뺄셈 결과를 고르세요", expr: "75 - 28 = ?", answer: 47, choices: [45, 47, 53, 57] },
+            { desc: "알맞은 곱셈 결과를 고르세요", expr: "14 × 5 = ?", answer: 70, choices: [60, 65, 70, 75] },
+            { desc: "알맞은 나눗셈 몫을 고르세요", expr: "84 ÷ 4 = ?", answer: 21, choices: [19, 21, 24, 25] },
+            { desc: "사칙연산 혼합 계산 결과를 고르세요", expr: "15 + 6 × 3 = ?", answer: 33, choices: [33, 48, 63, 39] },
+            { desc: "괄호가 있는 혼합 계산 결과를 고르세요", expr: "(24 - 8) ÷ 2 = ?", answer: 8, choices: [6, 8, 10, 12] },
+            { desc: "알맞은 덧셈 결과를 고르세요", expr: "56 + 37 = ?", answer: 93, choices: [83, 91, 93, 95] },
+            { desc: "알맞은 뺄셈 결과를 고르세요", expr: "90 - 43 = ?", answer: 47, choices: [43, 47, 53, 57] },
+            { desc: "알맞은 곱셈 결과를 고르세요", expr: "12 × 7 = ?", answer: 84, choices: [74, 82, 84, 94] },
+            { desc: "알맞은 나눗셈 몫을 고르세요", expr: "72 ÷ 3 = ?", answer: 24, choices: [22, 24, 26, 28] }
+        ];
+
+        function generateProblem() {
+            const randomIndex = Math.floor(Math.random() * questionBank.length);
+            currentProblem = questionBank[randomIndex];
+            
+            document.getElementById('problem-desc').innerText = currentProblem.desc;
+            document.getElementById('problem-expression').innerText = currentProblem.expr;
+
+            renderChoices();
+        }
+
+        function renderChoices() {
+            const grid = document.getElementById('choices-grid');
+            grid.innerHTML = '';
+
+            currentProblem.choices.forEach((choice) => {
+                const btn = document.createElement('button');
+                btn.className = "relative bg-slate-800 hover:bg-slate-700 border-2 border-purple-500/50 hover:border-cyan-400 text-white font-bold py-4 rounded-3xl shadow-xl flex items-center justify-center text-xl transition transform active:scale-95 group cursor-pointer";
+                
+                btn.innerHTML = `
+                    <div class="absolute -top-3 bg-slate-900 border border-purple-500/40 rounded-full w-8 h-8 flex items-center justify-center text-xs shadow-md group-hover:scale-110 transition">🐾</div>
+                    <span class="z-10">${choice}</span>
+                `;
+
+                btn.onclick = () => checkAnswer(choice);
+                grid.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selected) {
+            if (isPaused) return;
+
+            const isCorrect = (selected === currentProblem.answer);
+
+            const allBtns = document.querySelectorAll('#choices-grid button');
+            allBtns.forEach(b => b.disabled = true);
+
+            showOverlay(isCorrect);
+
+            if (isCorrect) {
+                score += 100;
+                streak += 1;
+                stepOffset = Math.max(-MAX_STEPS, stepOffset - 1); 
+                playTone(600, 0.15);
+            } else {
+                streak = 0;
+                stepOffset = Math.min(MAX_STEPS, stepOffset + 1); 
+                playTone(200, 0.2);
+            }
+
+            updateHUD();
+            updateTugAnimation();
+
+            setTimeout(() => {
+                hideOverlay();
+                
+                if (stepOffset <= -MAX_STEPS) {
+                    showGameOverModal("축하합니다! 플레이어가 줄다리기 대결에서 승리했습니다! 🎉");
+                } else if (stepOffset >= MAX_STEPS) {
+                    showGameOverModal("아쉽습니다! 컴퓨터(COM)가 줄다리기 대결에서 승리했습니다! 🤖");
+                } else {
+                    generateProblem();
+                }
+            }, 900);
+        }
+
+        function showOverlay(isCorrect) {
+            const overlay = document.getElementById('result-overlay');
+            const icon = document.getElementById('overlay-icon');
+
+            if (isCorrect) {
+                icon.innerText = "⭕";
+                icon.className = "text-8xl sm:text-9xl mb-2 animate-pop text-emerald-400 drop-shadow-[0_0_35px_rgba(52,211,153,0.8)]";
+            } else {
+                icon.innerText = "❌";
+                icon.className = "text-8xl sm:text-9xl mb-2 animate-pop text-rose-500 drop-shadow-[0_0_35px_rgba(244,63,94,0.8)]";
+            }
+
+            overlay.classList.remove('hidden');
+        }
+
+        function hideOverlay() {
+            document.getElementById('result-overlay').classList.add('hidden');
+        }
+
+        function updateHUD() {
+            document.getElementById('score-val').innerText = score;
+            document.getElementById('streak-val').innerText = streak;
+            
+            const stepsText = document.getElementById('steps-remaining');
+            if (stepOffset === 0) {
+                stepsText.innerText = "중앙 (6마디 균형 유지)";
+                stepsText.className = "text-amber-300";
+            } else if (stepOffset < 0) {
+                stepsText.innerText = `플레이어 우세 (${Math.abs(stepOffset)}마디 당김)`;
+                stepsText.className = "text-emerald-300";
+            } else {
+                stepsText.innerText = `컴퓨터 우세 (${stepOffset}마디 당김)`;
+                stepsText.className = "text-rose-300";
+            }
+        }
+
+        function updateTugAnimation() {
+            const rope = document.getElementById('rope-container');
+            const charLeft = document.getElementById('char-left');
+            const charRight = document.getElementById('char-right');
+
+            const segmentWidth = 76; 
+            const pixelShift = stepOffset * segmentWidth; 
+            rope.style.transform = `translateX(${pixelShift}px)`;
+            charLeft.style.transform = `translateX(${pixelShift * 0.5}px) scale(${1 - (stepOffset * 0.03)})`;
+            charRight.style.transform = `translateX(${pixelShift * 0.5}px) scale(${1 + (stepOffset * 0.03)})`;
+        }
+
+        function showGameOverModal(message) {
+            isPaused = true;
+            document.getElementById('modal-title').innerText = "게임 종료!";
+            document.getElementById('modal-title').className = "text-3xl font-bold text-cyan-400 mb-3";
+            document.getElementById('modal-desc').innerHTML = `<p class="text-center font-bold text-base text-white mb-1">${message}</p><p class="text-center text-xs text-amber-300">최종 획득 점수: ${score}점</p>`;
+            
+            // Show scoreboard input section
+            document.getElementById('scoreboard-container').classList.remove('hidden');
+            renderScoreboard();
+
+            document.getElementById('modal-btn').innerText = "다시 도전하기 🔄";
+            document.getElementById('modal-overlay').classList.remove('hidden');
+        }
+
+        function saveScore() {
+            const nicknameInput = document.getElementById('player-nickname');
+            const nickname = nicknameInput.value.trim() || "익명의 수학자";
+            
+            let scores = JSON.parse(localStorage.getItem('baegot_math_scores') || '[]');
+            scores.push({ name: nickname, score: score, date: new Date().toLocaleDateString() });
+            scores.sort((a, b) => b.score - a.score);
+            scores = scores.slice(0, 5); // Keep top 5
+
+            localStorage.setItem('baegot_math_scores', JSON.stringify(scores));
+            renderScoreboard();
+            nicknameInput.value = '';
+        }
+
+        function renderScoreboard() {
+            const listEl = document.getElementById('scoreboard-list');
+            const scores = JSON.parse(localStorage.getItem('baegot_math_scores') || '[]');
+
+            if (scores.length === 0) {
+                listEl.innerHTML = `<p class="text-slate-400 text-center py-1">아직 등록된 기록이 없습니다.</p>`;
+                return;
+            }
+
+            listEl.innerHTML = scores.map((item, idx) => `
+                <div class="flex justify-between items-center bg-slate-800/80 px-3 py-1.5 rounded-xl border border-purple-500/20">
+                    <span class="font-bold text-white">${idx + 1}. ${item.name}</span>
+                    <span class="text-amber-400 font-bold">${item.score}점</span>
+                </div>
+            `).join('');
+        }
+
+        function playTone(freq, duration) {
+            if (!soundOn) return;
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.log("Audio not supported or blocked");
+            }
+        }
+
+        function togglePause() {
+            isPaused = true;
+            document.getElementById('modal-title').innerText = "일시 정지";
+            document.getElementById('modal-title').className = "text-3xl font-bold text-amber-400 mb-3";
+            document.getElementById('modal-desc').innerHTML = `<p class="text-center text-slate-300">게임이 일시 정지되었습니다. 계속하려면 버튼을 누르세요.</p>`;
+            document.getElementById('scoreboard-container').classList.add('hidden');
+            document.getElementById('modal-btn').innerText = "게임 계속하기 ▶️";
+            document.getElementById('modal-overlay').classList.remove('hidden');
+        }
+
+        function startGame() {
+            if (stepOffset <= -MAX_STEPS || stepOffset >= MAX_STEPS) {
+                score = 0;
+                streak = 0;
+                stepOffset = 0;
+                updateHUD();
+                updateTugAnimation();
+            }
+            isPaused = false;
+            document.getElementById('scoreboard-container').classList.add('hidden');
+            document.getElementById('modal-overlay').classList.add('hidden');
+            generateProblem();
+        }
+
+        function toggleSound() {
+            soundOn = !soundOn;
+            document.getElementById('sound-btn').innerText = soundOn ? "🔊" : "🔇";
+        }
+
+        function toggleMusic() {
+            musicOn = !musicOn;
+            document.getElementById('music-btn').innerText = musicOn ? "🎵" : "🔕";
+        }
+
+        window.onload = function() {
+            updateHUD();
+            renderScoreboard();
+        };
+    </script>
+</body>
+</html>
