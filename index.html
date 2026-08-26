@@ -19,7 +19,7 @@
         }
         @keyframes bounce-slow {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+            50% { transform: translateY(-8px); }
         }
         .animate-bounce-slow {
             animation: bounce-slow 1.5s infinite ease-in-out;
@@ -75,26 +75,26 @@
                 </div>
             </div>
 
-            <!-- Tug of War Visual Scene with Precise 6-Segment Tracking -->
+            <!-- Full-Width Tug of War Scene with Precise Segment Alignment -->
             <div class="relative z-20 flex items-center justify-center w-full px-2 sm:px-8 mt-6">
                 
-                <!-- Rope & 6-Segment Sausage Track Container -->
-                <div class="absolute inset-x-4 sm:inset-x-12 flex flex-col items-center justify-center pointer-events-none">
+                <!-- Rope & 6-Segment Sausage Track Container (Full Width Edge-to-Edge) -->
+                <div class="absolute inset-x-2 sm:inset-x-8 flex flex-col items-center justify-center pointer-events-none">
                     <!-- Step Indicators -->
-                    <div class="flex justify-between w-full px-6 sm:px-12 mb-3 opacity-90">
+                    <div class="flex justify-between w-full px-4 sm:px-10 mb-3 opacity-90">
                         <div class="w-5 h-5 rounded-full border-2 border-cyan-300 bg-cyan-900/90 flex items-center justify-center text-xs" title="플레이어 승리 지점">🏁</div>
                         <div class="w-4 h-4 rounded-full bg-amber-400 shadow-xl scale-125" id="center-marker" title="중앙"></div>
                         <div class="w-5 h-5 rounded-full border-2 border-rose-300 bg-rose-900/90 flex items-center justify-center text-xs" title="컴퓨터 승리 지점">🏁</div>
                     </div>
 
-                    <!-- 6 Sausage Segments Connected as Rope with Precise Grid Segment Shift -->
-                    <div id="rope-container" class="w-full h-10 bg-amber-800/95 rounded-full grid grid-cols-6 gap-1 p-1.5 shadow-inner border-2 border-amber-600 relative transition-transform duration-300 ease-out" style="transform: translateX(0px);">
-                        <div class="h-6 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 rounded-full sausage-segment border border-amber-400/60"></div>
-                        <div class="h-6 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 rounded-full sausage-segment border border-amber-400/60"></div>
-                        <div class="h-6 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 rounded-full sausage-segment border border-amber-400/60"></div>
-                        <div class="h-6 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 rounded-full sausage-segment border border-amber-400/60"></div>
-                        <div class="h-6 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 rounded-full sausage-segment border border-amber-400/60"></div>
-                        <div class="h-6 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 rounded-full sausage-segment border border-amber-400/60"></div>
+                    <!-- 6 Sausage Segments Connected as Rope with Precise Dynamic Pixel Tracking -->
+                    <div id="rope-container" class="w-full h-11 bg-amber-800/95 rounded-full grid grid-cols-6 gap-1.5 p-1.5 shadow-inner border-2 border-amber-600 relative transition-transform duration-300 ease-out" style="transform: translateX(0px);">
+                        <div id="seg-0" class="h-7 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 rounded-full sausage-segment border border-amber-400/60"></div>
+                        <div id="seg-1" class="h-7 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 rounded-full sausage-segment border border-amber-400/60"></div>
+                        <div id="seg-2" class="h-7 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 rounded-full sausage-segment border border-amber-400/60"></div>
+                        <div id="seg-3" class="h-7 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 rounded-full sausage-segment border border-amber-400/60"></div>
+                        <div id="seg-4" class="h-7 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 rounded-full sausage-segment border border-amber-400/60"></div>
+                        <div id="seg-5" class="h-7 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 rounded-full sausage-segment border border-amber-400/60"></div>
                     </div>
                     
                     <!-- Steps remaining helper text -->
@@ -115,16 +115,16 @@
             </div>
         </div>
 
-        <div class="p-6 sm:p-12 bg-slate-900 flex flex-col items-center justify-center relative w-full">
+        <div class="p-6 sm:p-10 bg-slate-900 flex flex-col items-center justify-center relative w-full">
             
             <!-- Problem Box -->
-            <div class="bg-slate-800/95 border-2 border-purple-500/40 rounded-3xl px-6 sm:px-10 py-6 sm:py-8 w-full text-center shadow-2xl mb-6 relative">
+            <div class="bg-slate-800/95 border-2 border-purple-500/40 rounded-3xl px-6 sm:px-12 py-6 sm:py-8 w-full max-w-4xl text-center shadow-2xl mb-6 relative">
                 <p id="problem-desc" class="text-slate-300 text-sm sm:text-lg mb-2 font-semibold">다음 자연수 사칙연산의 알맞은 답을 고르세요</p>
                 <h2 id="problem-expression" class="text-3xl sm:text-6xl font-black text-cyan-300 tracking-wider">12 + 15 = ?</h2>
             </div>
 
             <!-- Choice Buttons Grid -->
-            <div id="choices-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 w-full">
+            <div id="choices-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 w-full max-w-4xl">
                 <!-- Injected dynamically -->
             </div>
         </div>
@@ -298,13 +298,21 @@
             const charLeft = document.getElementById('char-left');
             const charRight = document.getElementById('char-right');
 
-            const containerWidth = rope.clientWidth;
-            const singleSegmentWidth = containerWidth / 6; 
-            const pixelShift = stepOffset * (singleSegmentWidth / 3); 
+            // Measure exact individual sausage segment width dynamically to prevent mismatch
+            const firstSeg = document.getElementById('seg-0');
+            if (!firstSeg) return;
+            
+            const segWidth = firstSeg.offsetWidth;
+            const computedStyle = window.getComputedStyle(rope);
+            const gap = parseFloat(computedStyle.gap) || 6;
+            
+            // Exact shift per step equals one sausage segment width plus its gap
+            const singleStepPixel = segWidth + gap;
+            const totalShift = stepOffset * singleStepPixel; 
 
-            rope.style.transform = `translateX(${pixelShift}px)`;
-            charLeft.style.transform = `translateX(${pixelShift * 0.7}px) scale(${1 - (stepOffset * 0.03)})`;
-            charRight.style.transform = `translateX(${pixelShift * 0.7}px) scale(${1 + (stepOffset * 0.03)})`;
+            rope.style.transform = `translateX(${totalShift}px)`;
+            charLeft.style.transform = `translateX(${totalShift * 0.6}px) scale(${1 - (stepOffset * 0.02)})`;
+            charRight.style.transform = `translateX(${totalShift * 0.6}px) scale(${1 + (stepOffset * 0.02)})`;
         }
 
         function showGameOverModal(message) {
